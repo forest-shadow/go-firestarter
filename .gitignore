@@ -1,1 +1,46 @@
-.env.local.yml
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Dev dependencies
+/.tools/
+
+# Generated files
+/.bin/
+/.gen/
+coverage.out
+# Ogen generated files
+**/oas_*_gen.go
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+logs/
+tmp/
+
+# Config files with sensitive data
+configs/env.*.yaml
+!configs/env.example.yaml

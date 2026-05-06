@@ -1,0 +1,204 @@
+version: "3"
+
+# Global settings
+silent: true
+
+vars:
+  # --- Dev Dependencies Versions ---
+  AIR_VERSION: "v1.65.1"
+  BUF_VERSION: "v1.69.0"
+  GO_VERSION: "1.26.2"
+  GOOSE_VERSION: "v3.27.1"
+  GOLANGCI_LINT_VERSION: "v2.12.1"
+  LEFTHOOK_VERSION: "v2.1.6"
+  OGEN_VERSION: "v1.20.3"
+
+  # --- Application binary name ---
+  APP_NAME: go-starter
+
+  # --- Directories ---
+  BIN_DIR: "{{.ROOT_DIR}}/.bin"
+  TOOLS_DIR: "{{.ROOT_DIR}}/.tools"
+
+tasks:
+  # --- Install dependencies and tools ---
+  install:check-go:
+    desc: "🔍 Check required Go version"
+    cmds:
+      - |
+        GO_CURRENT_VERSION=$(go version | grep -o 'go[0-9]\+\.[0-9]\+\.[0-9]\+' | sed 's/go//')
+        GO_REQUIRED_VERSION="{{.GO_VERSION}}"
+        echo "Required Go version: $GO_REQUIRED_VERSION"
+        echo "Current Go version: $GO_CURRENT_VERSION"
+        if [ "$GO_CURRENT_VERSION" != "$GO_REQUIRED_VERSION" ]; then
+          echo "❌ Go version mismatch!"
+          exit 1
+        fi
+        echo "✅ Go version is correct"
+
+  install:all:
+    desc: "📦 Install all required dev deps and tools"
+    cmds:
+      - task: dev:install:deps
+      # - task: dev:install:hooks
+
+  install:deps:
+    desc: "📦 Install all required dev deps to {{.TOOLS_DIR}}"
+    deps: [install:check-go]
+    cmds:
+      - |
+        if [ ! -d {{.TOOLS_DIR}} ]; then
+          mkdir -p {{.TOOLS_DIR}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/air ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/air-verse/air@{{.AIR_VERSION}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/buf ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/bufbuild/buf/cmd/buf@{{.BUF_VERSION}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/goose ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/pressly/goose/v3/cmd/goose@{{.GOOSE_VERSION}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/golangci-lint ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@{{.GOLANGCI_LINT_VERSION}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/lefthook ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/evilmartians/lefthook/v2@{{.LEFTHOOK_VERSION}}
+        fi
+      - |
+        if [ ! -f {{.TOOLS_DIR}}/ogen ]; then
+          GOBIN={{.TOOLS_DIR}} go install github.com/ogen-go/ogen/cmd/ogen@{{.OGEN_VERSION}}
+        fi
+
+  # install:hooks:
+  #   desc: "📦 Install and activate git-hooks with lefthook"
+  #   deps: [install:deps]
+  #   cmds:
+  #     - .bin/lefthook install
+
+  # --- Formatting and linting ---
+  # lint:fix:
+  #   desc: "🔍 Format Syntax and Code Style"
+  #   deps: [install:deps]
+  #   cmds:
+  #     - "{{.TOOLS_DIR}}/golangci-lint run --fix ./..."
+
+  # lint:run:
+  #   desc: "🔍 Linting Code Style"
+  #   deps: [install:deps]
+  #   cmds:
+  #     - "{{.TOOLS_DIR}}/golangci-lint run ./..."
+
+  # lint:verify:
+  #   desc: "🔍 Verify Linting Config"
+  #   deps: [install:deps]
+  #   cmds:
+  #     - "{{.TOOLS_DIR}}/golangci-lint config verify"
+
+  # --- Gen: OpenAPI files ---
+  # openapi:merge:api-specs:
+  #   desc: "🧬 Merge nested OpenAPI specs into single file"
+  #   vars:
+  #     SPEC_PATH: "{{.SPEC_PATH}}" # path to root spec
+  #     OUT_FILE: "{{.OUT_FILE}}" # name/path of output file
+  #   cmds:
+  #     - >
+  #       npx @redocly/cli@latest
+  #       bundle {{.SPEC_PATH}}
+  #       -o {{.OUT_FILE}}
+
+  # openapi:merge:items-v1:
+  #   desc: "🧬 Merge Items API v1 specs into single file"
+  #   cmds:
+  #     - task: openapi:merge:api-specs
+  #       vars:
+  #         SPEC_PATH: ./api/items/v1/items.openapi.yaml
+  #         OUT_FILE: ./api/items/v1/items-merged.openapi.yaml
+
+  # openapi:docs:gen-docs:
+  #   desc: "📄 Generate HTML documentation for OpenAPI specification"
+  #   vars:
+  #     SPEC_PATH: "{{.SPEC_PATH}}" # path to spec
+  #     OUT_FILE: "{{.OUT_FILE}}" # output HTML
+  #   cmds:
+  #     - >
+  #       npx @redocly/cli@latest build-docs
+  #       {{.SPEC_PATH}}
+  #       -o {{.OUT_FILE}}
+
+  # openapi:docs:items-v1:
+  #   desc: "📄 Generate HTML documentation for Items API v1"
+  #   cmds:
+  #     - task: openapi:docs:gen-docs
+  #       vars:
+  #         SPEC_PATH: ./api/items/v1/items-merged.openapi.yaml
+  #         OUT_FILE: ./api/items/v1/items-api-v1.html
+
+  # openapi:gen:api:
+  #   desc: "🧬 Generate API code from OpenAPI specification"
+  #   vars:
+  #     SPEC_PATH: "{{.SPEC_PATH}}" # path to root specification
+  #     PACKAGE: "{{.PACKAGE}}" # package name
+  #     OUTPUT: "{{.OUTPUT}}" # generated files output directory
+  #   cmds:
+  #     - "{{.TOOLS_DIR}}/ogen --target {{.OUTPUT}} --package {{.PACKAGE}} --clean {{.SPEC_PATH}}"
+
+  # openapi:gen:items-v1:
+  #   desc: "🧬 Generate Items API v1 code"
+  #   deps: [install:deps]
+  #   cmds:
+  #     - task: openapi:gen:api
+  #       vars:
+  #         SPEC_PATH: ./api/items/v1/items-merged.openapi.yaml
+  #         PACKAGE: items_v1
+  #         OUTPUT: ./internal/transport/http/v1/items
+
+  # dev:proto-gen:
+  #     desc: "🧬 Generate Go code from .proto files"
+  #     deps: [install:deps]
+  #     cmds:
+  #       - '{{.TOOLS_DIR}}/buf generate'
+
+  # --- Run application ---
+  dev:run:
+    desc: "🚀 Run Application"
+    deps: [install:deps]
+    cmds:
+      - '{{.TOOLS_DIR}}/air --build.cmd "go build -o {{.BIN_DIR}}/{{.APP_NAME}} ./cmd" --build.entrypoint "{{.BIN_DIR}}/{{.APP_NAME}}"'
+
+  # --- Clean up ---
+  clean:all:
+    desc: "🗑️ Delete all generated files and dev deps binaries"
+    cmds:
+      - task: dev:clean:deps
+      # - task: dev:clean:generated
+
+  # clean:generated:
+  #   desc: "🗑️ Delete generated files"
+  #   dir: "{{.ROOT_DIR}}"
+  #   cmds:
+  #     - rm -rf {{.BIN_DIR}}
+  #     - rm -f coverage.out
+
+  clean:deps:
+    desc: "🗑️ Delete dev deps binaries"
+    cmds:
+      - rm -rf {{.TOOLS_DIR}}
+      - echo "🗑️ Dev deps binaries deleted"
+
+  # --- Tasks for testing ---
+  # test:run:
+  #   desc: "🧪 Run tests"
+  #   cmds:
+  #     - "go test -v -race -timeout 30s ./..."
+
+  # test:coverage:
+  #   desc: "📊 Run tests with coverage report"
+  #   cmds:
+  #     - go test -race -coverprofile=coverage.out -covermode=atomic ./...
+  #     - go tool cover -html=coverage.out
