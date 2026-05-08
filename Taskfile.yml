@@ -14,7 +14,7 @@ vars:
   OGEN_VERSION: "v1.20.3"
 
   # --- Application binary name ---
-  APP_NAME: go-starter
+  APP_NAME: go-firestarter
 
   # --- Directories ---
   BIN_DIR: "{{.ROOT_DIR}}/.bin"

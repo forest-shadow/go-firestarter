@@ -3,7 +3,7 @@ package app
 import (
 	"go.uber.org/zap"
 
-	"go-starter/pkg/zaplogger"
+	"github.com/forest-shadow/go-firestarter/pkg/zaplogger"
 )
 
 func NewLogger(c *Config) (*zap.SugaredLogger, error) {

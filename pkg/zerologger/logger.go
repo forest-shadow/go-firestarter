@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"go-starter/pkg/config"
+	"github.com/forest-shadow/go-firestarter/pkg/config"
 )
 
 type Config struct {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-starter/internal/app"
+	"github.com/forest-shadow/go-firestarter/internal/app"
 )
 
 func main() {

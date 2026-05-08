@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-viper/mapstructure/v2"
 
-	"go-starter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/env"
 )
 
 type Logger struct {

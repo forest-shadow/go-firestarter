@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go-starter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/env"
 )
 
 type App struct {

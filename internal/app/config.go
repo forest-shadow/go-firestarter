@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	"go-starter/pkg/config"
-	e "go-starter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/config"
+	e "github.com/forest-shadow/go-firestarter/pkg/env"
 )
 
 type Config struct {

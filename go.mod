@@ -1,4 +1,4 @@
-module go-starter
+module github.com/forest-shadow/go-firestarter
 
 go 1.25.1
 

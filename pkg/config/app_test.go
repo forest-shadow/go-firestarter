@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"go-starter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/env"
 )
 
 func TestAppValidate(t *testing.T) {

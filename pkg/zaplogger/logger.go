@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/term"
 
-	"go-starter/pkg/config"
+	"github.com/forest-shadow/go-firestarter/pkg/config"
 )
 
 type Config struct {
