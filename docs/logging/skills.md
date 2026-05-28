@@ -75,7 +75,7 @@ Choose the basic skill by default.
 
 Upgrade to the strict skill when at least one of the following is true:
 
-- enum-like config types are reused across packages
+- enum-like config/domain types are reused across packages
 - config is intended as a reference implementation
 - early decode-time rejection is a project requirement
 - agent-generated code should demonstrate best-practice strict parsing

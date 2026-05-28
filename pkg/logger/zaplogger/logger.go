@@ -3,7 +3,6 @@ package zaplogger
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -11,6 +10,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/forest-shadow/go-firestarter/pkg/config"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 type Config struct {
@@ -49,13 +49,13 @@ func New(c Config) (*zap.SugaredLogger, error) {
 	return l.Sugar(), nil
 }
 
-func buildOutput(format config.LogFormat) (zapcore.Encoder, zapcore.WriteSyncer, error) {
+func buildOutput(format logger.LogFormat) (zapcore.Encoder, zapcore.WriteSyncer, error) {
 	out := zapcore.Lock(os.Stderr)
 
 	switch format {
-	case config.LogFormatJSON:
+	case logger.LogFormatJSON:
 		return zapcore.NewJSONEncoder(jsonEncoderConfig()), out, nil
-	case config.LogFormatConsole:
+	case logger.LogFormatConsole:
 		return zapcore.NewConsoleEncoder(consoleEncoderConfig(term.IsTerminal(int(os.Stderr.Fd())))), out, nil
 	default:
 		return nil, nil, fmt.Errorf("unsupported logger format %q", format)
@@ -96,37 +96,4 @@ func baseEncoderConfig() zapcore.EncoderConfig {
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
-}
-
-const (
-	gruvboxGray   = 245
-	gruvboxBlue   = 109
-	gruvboxGreen  = 142
-	gruvboxYellow = 214
-	gruvboxOrange = 208
-	gruvboxRed    = 167
-	gruvboxReset  = "\x1b[0m"
-)
-
-func levelColor(level zapcore.Level) int {
-	switch level {
-	case zapcore.DebugLevel:
-		return gruvboxBlue
-	case zapcore.InfoLevel:
-		return gruvboxGreen
-	case zapcore.WarnLevel:
-		return gruvboxYellow
-	case zapcore.ErrorLevel, zapcore.DPanicLevel, zapcore.PanicLevel, zapcore.FatalLevel:
-		return gruvboxRed
-	default:
-		return gruvboxOrange
-	}
-}
-
-func applyColor(colorCode int, value string, enabled bool) string {
-	if !enabled || value == "" {
-		return value
-	}
-
-	return "\x1b[38;5;" + strconv.Itoa(colorCode) + "m" + value + gruvboxReset
 }

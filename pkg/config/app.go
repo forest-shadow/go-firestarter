@@ -1,29 +1,28 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/forest-shadow/go-firestarter/pkg/env"
 )
 
 type App struct {
-	Name    string     `mapstructure:"name"		required:"true"`
-	Version string     `mapstructure:"version"	required:"true"`
-	Env     env.AppEnv `mapstructure:"env"		required:"true"`
+	Name    string     `mapstructure:"name"`
+	Version string     `mapstructure:"version"`
+	Env     env.AppEnv `mapstructure:"env"`
 }
 
 func (a App) Validate() error {
 	if strings.TrimSpace(a.Name) == "" {
-		return fmt.Errorf("app name is required")
+		return missingRequiredField("app.name")
 	}
 
 	if strings.TrimSpace(a.Version) == "" {
-		return fmt.Errorf("app version is required")
+		return missingRequiredField("app.version")
 	}
 
 	if !a.Env.IsValid() {
-		return fmt.Errorf("unsupported app env %q", a.Env)
+		return invalidField("app.env", a.Env)
 	}
 
 	return nil

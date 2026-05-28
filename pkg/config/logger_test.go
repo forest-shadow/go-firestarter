@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/forest-shadow/go-firestarter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 func TestLoggerWithDefaults(t *testing.T) {
@@ -14,12 +15,12 @@ func TestLoggerWithDefaults(t *testing.T) {
 
 	cfg := Logger{}.WithDefaults(env.AppEnvLocal)
 
-	if cfg.Level != LogLevelDebug {
-		t.Fatalf("expected default level %q, got %q", LogLevelDebug, cfg.Level)
+	if cfg.Level != logger.LogLevelDebug {
+		t.Fatalf("expected default level %q, got %q", logger.LogLevelDebug, cfg.Level)
 	}
 
-	if cfg.Format != LogFormatConsole {
-		t.Fatalf("expected default format %q, got %q", LogFormatConsole, cfg.Format)
+	if cfg.Format != logger.LogFormatConsole {
+		t.Fatalf("expected default format %q, got %q",logger.LogFormatConsole, cfg.Format)
 	}
 }
 
@@ -28,8 +29,8 @@ func TestLoggerWithDefaultsProductionFormat(t *testing.T) {
 
 	cfg := Logger{}.WithDefaults(env.AppEnvProduction)
 
-	if cfg.Format != LogFormatJSON {
-		t.Fatalf("expected production default format %q, got %q", LogFormatJSON, cfg.Format)
+	if cfg.Format != logger.LogFormatJSON {
+		t.Fatalf("expected production default format %q, got %q", logger.LogFormatJSON, cfg.Format)
 	}
 }
 
@@ -37,8 +38,8 @@ func TestLoggerValidate(t *testing.T) {
 	t.Parallel()
 
 	valid := Logger{
-		Level:  LogLevelInfo,
-		Format: LogFormatJSON,
+		Level:  logger.LogLevelInfo,
+		Format: logger.LogFormatJSON,
 	}
 
 	if err := valid.Validate(); err != nil {
@@ -47,7 +48,7 @@ func TestLoggerValidate(t *testing.T) {
 
 	invalidLevel := Logger{
 		Level:  "trace",
-		Format: LogFormatJSON,
+		Format: logger.LogFormatJSON,
 	}
 
 	if err := invalidLevel.Validate(); err == nil {
@@ -55,7 +56,7 @@ func TestLoggerValidate(t *testing.T) {
 	}
 
 	invalidFormat := Logger{
-		Level:  LogLevelInfo,
+		Level:  logger.LogLevelInfo,
 		Format: "pretty",
 	}
 
@@ -67,13 +68,13 @@ func TestLoggerValidate(t *testing.T) {
 func TestLogLevelUnmarshalText(t *testing.T) {
 	t.Parallel()
 
-	var level LogLevel
+	var level logger.LogLevel
 	if err := level.UnmarshalText([]byte("info")); err != nil {
 		t.Fatalf("expected valid log level, got error: %v", err)
 	}
 
-	if level != LogLevelInfo {
-		t.Fatalf("expected log level %q, got %q", LogLevelInfo, level)
+	if level != logger.LogLevelInfo {
+		t.Fatalf("expected log level %q, got %q", logger.LogLevelInfo, level)
 	}
 
 	if err := level.UnmarshalText([]byte("trace")); err == nil {
@@ -84,13 +85,13 @@ func TestLogLevelUnmarshalText(t *testing.T) {
 func TestLogFormatUnmarshalText(t *testing.T) {
 	t.Parallel()
 
-	var format LogFormat
+	var format logger.LogFormat
 	if err := format.UnmarshalText([]byte("json")); err != nil {
 		t.Fatalf("expected valid log format, got error: %v", err)
 	}
 
-	if format != LogFormatJSON {
-		t.Fatalf("expected log format %q, got %q", LogFormatJSON, format)
+	if format != logger.LogFormatJSON {
+		t.Fatalf("expected log format %q, got %q", logger.LogFormatJSON, format)
 	}
 
 	if err := format.UnmarshalText([]byte("pretty")); err == nil {

@@ -8,6 +8,7 @@ The goal is to provide a stable reference for:
 
 - application logging bootstrap
 - logger backend implementation patterns
+- the shared logging config contract
 - config validation with `Validate()`
 - strict enum-like config parsing with `UnmarshalText`
 - `viper`/`mapstructure` decode hooks
@@ -34,15 +35,31 @@ This keeps `cmd/main.go` thin and prevents logging setup details from leaking in
 - `internal/app`
   Owns application bootstrap and config loading.
 - `pkg/config`
-  Owns config structs, defaults, validation, and decode hooks.
+  Owns the starter's typed config structs, default application, validation, and decode hooks.
 - `pkg/env`
-  Owns the `AppEnv` domain type.
-- `pkg/zaplogger`
+  Owns the starter's environment vocabulary.
+- `pkg/logger`
+  Owns the starter's shared logging vocabulary and default logging policy.
+- `pkg/logger/zaplogger`
   Owns the concrete `zap` backend.
-- `pkg/zerologger`
+- `pkg/logger/zerologger`
   Owns the alternative `zerolog` backend.
 
-This split is intentionally pragmatic rather than abstract. The system is backend-aware, not backend-agnostic.
+This split is intentionally pragmatic rather than abstract. The starter defines an opinionated default config contract, and the concrete logger backends implement that contract.
+
+### Layering model
+
+The intended dependency direction is:
+
+```text
+pkg/env
+  <- pkg/logger
+  <- pkg/config
+  <- pkg/logger/zaplogger, pkg/logger/zerologger
+  <- internal/app
+```
+
+`pkg/config`, `pkg/env`, and `pkg/logger` are not treated as fully independent libraries. Together, they define the starter's reusable defaults. More specific applications can replace or adapt this contract when they need different config structure, environment vocabulary, or logger policy.
 
 ## Logging Design Principles
 
@@ -56,21 +73,24 @@ Why:
 - centralizes operational wiring
 - makes config and logger initialization easier to test
 
-### 2. Let the config package own config rules
+### 2. Keep config rules and logging policy explicit
 
-Defaults and validation should live next to the config types, not inside logger backends.
+Config validation should live next to the config types, not inside logger backends.
 
 Examples:
 
 - `Logger.WithDefaults(appEnv)`
 - `Logger.Validate()`
 - `App.Validate()`
+- `logger.DefaultLogFormat(appEnv)`
 
 Why:
 
 - one source of truth
 - avoids duplicating config rules across `zap` and `zerolog`
 - makes behavior predictable across backends
+
+`logger.DefaultLogFormat(appEnv)` intentionally lives in `pkg/logger`: choosing `console` for local/development and `json` elsewhere is logging policy, while `config.Logger.WithDefaults(...)` is the place where that policy is applied to the loaded config.
 
 ### 3. Let backend packages own backend behavior
 
@@ -127,8 +147,8 @@ Use `UnmarshalText` for enum-like or scalar domain types that should reject inva
 Examples:
 
 - `env.AppEnv`
-- `config.LogLevel`
-- `config.LogFormat`
+- `logger.LogLevel`
+- `logger.LogFormat`
 
 This layer is useful when a type:
 

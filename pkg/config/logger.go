@@ -6,32 +6,17 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 
 	"github.com/forest-shadow/go-firestarter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 type Logger struct {
-	Level  LogLevel  `mapstructure:"level"`
-	Format LogFormat `mapstructure:"format"`
+	Level  logger.LogLevel  `mapstructure:"level"`
+	Format logger.LogFormat `mapstructure:"format"`
 }
-
-type LogFormat string
-
-const (
-	LogFormatJSON    LogFormat = "json"
-	LogFormatConsole LogFormat = "console"
-)
-
-type LogLevel string
-
-const (
-	LogLevelDebug LogLevel = "debug"
-	LogLevelInfo  LogLevel = "info"
-	LogLevelWarn  LogLevel = "warn"
-	LogLevelError LogLevel = "error"
-)
 
 func (c Logger) WithDefaults(appEnv env.AppEnv) Logger {
 	if c.Level == "" {
-		c.Level = LogLevelDebug
+		c.Level = logger.LogLevelDebug
 	}
 
 	if c.Format == "" {
@@ -53,52 +38,12 @@ func (c Logger) Validate() error {
 	return nil
 }
 
-func (l LogLevel) IsValid() bool {
-	switch l {
-	case LogLevelDebug, LogLevelInfo, LogLevelWarn, LogLevelError:
-		return true
-	default:
-		return false
-	}
-}
-
-func (l *LogLevel) UnmarshalText(text []byte) error {
-	value := LogLevel(text)
-	if !value.IsValid() {
-		return fmt.Errorf("unsupported logger level %q", text)
-	}
-
-	*l = value
-
-	return nil
-}
-
-func (f LogFormat) IsValid() bool {
-	switch f {
-	case LogFormatJSON, LogFormatConsole:
-		return true
-	default:
-		return false
-	}
-}
-
-func (f *LogFormat) UnmarshalText(text []byte) error {
-	value := LogFormat(text)
-	if !value.IsValid() {
-		return fmt.Errorf("unsupported logger format %q", text)
-	}
-
-	*f = value
-
-	return nil
-}
-
-func defaultLogFormat(appEnv env.AppEnv) LogFormat {
+func defaultLogFormat(appEnv env.AppEnv) logger.LogFormat {
 	switch appEnv {
 	case env.AppEnvLocal, env.AppEnvDevelopment:
-		return LogFormatConsole
+		return logger.LogFormatConsole
 	default:
-		return LogFormatJSON
+		return logger.LogFormatJSON
 	}
 }
 

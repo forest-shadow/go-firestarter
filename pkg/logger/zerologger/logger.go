@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/forest-shadow/go-firestarter/pkg/config"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 type Config struct {
@@ -30,10 +31,10 @@ func New(c Config) (zerolog.Logger, error) {
 	var out io.Writer
 
 	switch loggerConfig.Format {
-	case config.LogFormatJSON:
+	case logger.LogFormatJSON:
 		out = os.Stderr
 
-	case config.LogFormatConsole:
+	case logger.LogFormatConsole:
 		out = zerolog.ConsoleWriter{
 			Out:        os.Stderr,
 			TimeFormat: time.DateTime,
