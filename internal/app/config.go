@@ -10,11 +10,12 @@ import (
 
 	"github.com/forest-shadow/go-firestarter/pkg/config"
 	e "github.com/forest-shadow/go-firestarter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 type Config struct {
-	App    config.App
-	Logger config.Logger
+	App        config.App        `mapstructure:"app"`
+	Logger     logger.Config     `mapstructure:"logger"`
 }
 
 func GetConfig() (*Config, error) {

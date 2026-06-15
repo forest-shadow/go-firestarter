@@ -25,8 +25,8 @@ The application currently follows this startup sequence:
 2. `viper.Unmarshal(...)` decodes into typed config structs.
 3. `config.DecodeHook()` enables `encoding.TextUnmarshaler`-based parsing.
 4. `App.Validate()` validates the app section.
-5. `Logger.WithDefaults(...)` applies logger defaults.
-6. `Logger.Validate()` validates the logger section.
+5. `logger.Config.WithDefaults(...)` applies logger defaults.
+6. `logger.Config.Validate()` validates the logger section.
 7. `internal/app.NewLogger(...)` constructs the selected logger backend and returns the shared logger contract.
 
 This keeps `cmd/main.go` thin and prevents logging setup details from leaking into the entrypoint.
@@ -36,11 +36,11 @@ This keeps `cmd/main.go` thin and prevents logging setup details from leaking in
 - `internal/app`
   Owns application bootstrap and config loading.
 - `pkg/config`
-  Owns the starter's typed config structs, default application, validation, and decode hooks.
+  Owns shared config-loading support and app-level config structures.
 - `pkg/env`
   Owns the starter's environment vocabulary.
 - `pkg/logger`
-  Owns the starter's shared logging vocabulary, runtime logger contract, and default logging policy.
+  Owns the starter's shared logging vocabulary, logger config, runtime logger contract, and default logging policy.
 - `pkg/logger/zaplogger`
   Owns the concrete `zap` backend adapter.
 - `pkg/logger/zerologger`
@@ -54,8 +54,8 @@ The intended dependency direction is:
 
 ```text
 pkg/env
-  <- pkg/logger
   <- pkg/config
+  <- pkg/logger
   <- pkg/logger/zaplogger, pkg/logger/zerologger
   <- internal/app
 ```
@@ -80,8 +80,8 @@ Config validation should live next to the config types, not inside logger backen
 
 Examples:
 
-- `Logger.WithDefaults(appEnv)`
-- `Logger.Validate()`
+- `logger.Config.WithDefaults(appEnv)`
+- `logger.Config.Validate()`
 - `App.Validate()`
 - `logger.DefaultLogFormat(appEnv)`
 
@@ -91,7 +91,7 @@ Why:
 - avoids duplicating config rules across `zap` and `zerolog`
 - makes behavior predictable across backends
 
-`logger.DefaultLogFormat(appEnv)` intentionally lives in `pkg/logger`: choosing `console` for local/development and `json` elsewhere is logging policy, while `config.Logger.WithDefaults(...)` is the place where that policy is applied to the loaded config.
+`logger.DefaultLogFormat(appEnv)` intentionally lives in `pkg/logger`: choosing `console` for local/development and `json` elsewhere is logging policy, while `logger.Config.WithDefaults(...)` is the place where that policy is applied to the loaded config.
 
 ### 3. Let backend packages own backend behavior
 
@@ -146,7 +146,7 @@ Use `Validate()` when:
 Examples:
 
 - `App.Validate()`
-- `Logger.Validate()`
+- `logger.Config.Validate()`
 
 Typical rules:
 
@@ -367,7 +367,7 @@ When evolving it:
 
 - keep `internal/app.NewLogger(...)` returning `logger.Logger`
 - keep the interface focused on capabilities used by the application
-- keep config ownership in `pkg/config`
+- keep logger config ownership in `pkg/logger`
 - do not duplicate validation logic per backend
 - add adapter behavior in backend packages, not in callers
 

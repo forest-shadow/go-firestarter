@@ -15,7 +15,7 @@ import (
 
 type Config struct {
 	App    config.App
-	Logger config.Logger
+	Logger logger.Config
 }
 
 type Logger struct {

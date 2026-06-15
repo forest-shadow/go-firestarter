@@ -11,6 +11,7 @@ It currently owns:
 - supported log levels such as `debug`, `info`, `warn`, and `error`
 - the `LogFormat` type
 - supported output formats such as `json` and `console`
+- the `Config` type for logger configuration
 - the `Field` type and `F()` helper for structured log fields
 - the `Logger` interface used by application code
 - validation helpers for checking logging config values
@@ -41,6 +42,18 @@ The supported output formats are:
 Use `LogFormat.IsValid()` when accepting a format from configuration or other external input.
 
 ## Config loading
+
+`Config` owns the logger configuration section:
+
+```go
+type Config struct {
+	Level  LogLevel  `mapstructure:"level"`
+	Format LogFormat `mapstructure:"format"`
+}
+```
+
+Use `Config.WithDefaults(...)` to apply logger defaults and `Config.Validate()`
+to validate the selected level and format.
 
 `LogLevel` and `LogFormat` implement `UnmarshalText()` so configuration loaders can decode text values into typed logging settings.
 
@@ -88,5 +101,5 @@ Concrete logger constructors live in subpackages:
 - `pkg/logger/zaplogger`
 - `pkg/logger/zerologger`
 
-Those packages consume `pkg/logger` values through `pkg/config.Logger`, apply defaults, validate the selected level and format, and build the concrete logger.
+Those packages consume `pkg/logger` values through `logger.Config`, apply defaults, validate the selected level and format, and build the concrete logger.
 Both constructors return the shared `Logger` interface.

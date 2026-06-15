@@ -42,8 +42,8 @@ Expected practices:
 Current examples:
 
 - `pkg/config.App.Validate()`
-- `pkg/config.Logger.Validate()`
-- `pkg/config.Logger.WithDefaults(...)`
+- `pkg/logger.Config.Validate()`
+- `pkg/logger.Config.WithDefaults(...)`
 - `env.AppEnv.UnmarshalText(...)`
 - `logger.LogLevel.UnmarshalText(...)`
 - `logger.LogFormat.UnmarshalText(...)`
@@ -206,4 +206,3 @@ API or input DTOs to make validation a repeated infrastructure concern.
 
 Keep the decode-hook approach for strict typed config parsing when enum-like
 values should fail during unmarshal.
-

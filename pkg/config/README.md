@@ -6,15 +6,13 @@
 
 It currently owns:
 
-- config structs such as `App` and `Logger`
-- defaults application
+- config structs such as `App`
 - struct-level validation via `Validate()`
 - the shared decode hook used by the current `viper`/`mapstructure` pipeline
 
 It intentionally uses shared starter vocabulary from neighboring packages:
 
 - `pkg/env` provides `AppEnv`
-- `pkg/logger` provides `LogLevel`, `LogFormat`, and logging default policy
 
 This package is optimized for reference clarity and a stable starter config contract rather than for the strictest possible layer separation.
 
@@ -30,7 +28,9 @@ Reason:
 - keeping config validation and decode integration in one place makes them easier to study, reuse, and simplify
 - if strict decode-time validation later proves unnecessary, the unmarshalling layer can be removed more easily when it is centralized
 
-The enum-like scalar types still own their own `UnmarshalText()` behavior in their domain packages, such as `env.AppEnv`, `logger.LogLevel`, and `logger.LogFormat`. `pkg/config` provides the shared decode hook that enables that behavior in the current `viper`/`mapstructure` pipeline.
+Enum-like scalar types still own their own `UnmarshalText()` behavior in their
+domain packages. `pkg/config` provides the shared decode hook that enables that
+behavior in the current `viper`/`mapstructure` pipeline.
 
 ## When to consider moving decode integration into `internal`
 
@@ -46,6 +46,5 @@ If that happens, keep the following in `pkg/config`:
 
 - config types
 - `Validate()`
-- `WithDefaults()`
 
 Move only the framework-specific decode integration.
