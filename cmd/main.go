@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/forest-shadow/go-firestarter/internal/app"
+	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 func main() {
@@ -15,5 +16,7 @@ func main() {
 		panic(err)
 	}
 
-	l.Infow("application started", "env", c.App.Env)
+	defer l.Sync()
+
+	l.Info("application started", logger.F("env", c.App.Env))
 }

@@ -9,6 +9,7 @@ The goal is to provide a stable reference for:
 - application logging bootstrap
 - logger backend implementation patterns
 - the shared logging config contract
+- the shared runtime logger contract
 - config validation with `Validate()`
 - strict enum-like config parsing with `UnmarshalText`
 - `viper`/`mapstructure` decode hooks
@@ -26,7 +27,7 @@ The application currently follows this startup sequence:
 4. `App.Validate()` validates the app section.
 5. `Logger.WithDefaults(...)` applies logger defaults.
 6. `Logger.Validate()` validates the logger section.
-7. `internal/app.NewLogger(...)` constructs the concrete logger backend.
+7. `internal/app.NewLogger(...)` constructs the selected logger backend and returns the shared logger contract.
 
 This keeps `cmd/main.go` thin and prevents logging setup details from leaking into the entrypoint.
 
@@ -39,13 +40,13 @@ This keeps `cmd/main.go` thin and prevents logging setup details from leaking in
 - `pkg/env`
   Owns the starter's environment vocabulary.
 - `pkg/logger`
-  Owns the starter's shared logging vocabulary and default logging policy.
+  Owns the starter's shared logging vocabulary, runtime logger contract, and default logging policy.
 - `pkg/logger/zaplogger`
-  Owns the concrete `zap` backend.
+  Owns the concrete `zap` backend adapter.
 - `pkg/logger/zerologger`
-  Owns the alternative `zerolog` backend.
+  Owns the alternative `zerolog` backend adapter.
 
-This split is intentionally pragmatic rather than abstract. The starter defines an opinionated default config contract, and the concrete logger backends implement that contract.
+This split is intentionally pragmatic. The starter defines an opinionated config contract and a small runtime logger interface, and the concrete logger backends implement those contracts.
 
 ### Layering model
 
@@ -99,11 +100,22 @@ Logger-specific packages should focus on:
 - level conversion
 - encoder/output selection
 - backend-specific formatting
-- backend-specific ergonomics
+- adapting backend APIs to the shared `logger.Logger` interface
 
 They should not be the primary home for business rules about config validity.
 
-### 4. Prefer explicit operational behavior
+### 4. Keep application logging behind the shared contract
+
+Application packages should accept `logger.Logger` when they need to log.
+
+Why:
+
+- avoids package-global logger state
+- keeps `zap` and `zerolog` replaceable
+- prevents backend method names from leaking into application code
+- makes logger dependencies explicit in constructors
+
+### 5. Prefer explicit operational behavior
 
 Good examples from the current implementation:
 
@@ -303,6 +315,25 @@ Rule:
 
 Alternative backends should share config semantics even if their output formatting differs.
 
+### Compile-time interface checks
+
+Concrete logger backends should declare a compile-time interface check near the
+implementation type:
+
+```go
+var _ logger.Logger = Logger{}
+```
+
+This does not create a runtime dependency or register the implementation
+anywhere. It asks the compiler to verify that the concrete backend type still
+satisfies the shared `logger.Logger` contract.
+
+Use this pattern when a package intentionally implements a public interface but
+the relationship is otherwise only visible through constructors or tests. If the
+interface changes, or if the backend method signatures drift, the package fails
+to compile at the implementation boundary instead of failing later at a call
+site.
+
 ## Anti-Patterns to Avoid
 
 - putting config validation only inside backend constructors
@@ -310,7 +341,8 @@ Alternative backends should share config semantics even if their output formatti
 - assuming typed string aliases are true enums
 - adding color codes to non-TTY output
 - mutating package-global logger state when a local mechanism is possible
-- creating fake abstractions over a concrete logger backend without a real use case
+- leaking backend-specific APIs such as `Infow` or `zerolog.Event` into application packages
+- expanding `logger.Logger` into a broad clone of a backend API
 
 ## Testing Guidance
 
@@ -325,17 +357,15 @@ The most important integration test is not the method itself, but the real decod
 
 ## Guidance for Future Refactors
 
-If the codebase stays `zap`-first:
+The codebase now uses a backend-independent logger facade.
 
-- keep `internal/app.NewLogger(...)` returning a concrete `zap` type
-- avoid premature backend-agnostic interfaces
+When evolving it:
 
-If the codebase later needs backend independence:
-
-- introduce a stable facade intentionally
-- define a real interface around required logging capabilities
+- keep `internal/app.NewLogger(...)` returning `logger.Logger`
+- keep the interface focused on capabilities used by the application
 - keep config ownership in `pkg/config`
 - do not duplicate validation logic per backend
+- add adapter behavior in backend packages, not in callers
 
 ## Summary
 

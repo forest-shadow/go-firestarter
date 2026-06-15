@@ -18,7 +18,13 @@ type Config struct {
 	Logger config.Logger
 }
 
-func New(c Config) (*zap.SugaredLogger, error) {
+type Logger struct {
+	l *zap.SugaredLogger
+}
+
+var _ logger.Logger = Logger{}
+
+func New(c Config) (logger.Logger, error) {
 	loggerConfig := c.Logger.WithDefaults(c.App.Env)
 	if err := loggerConfig.Validate(); err != nil {
 		return nil, fmt.Errorf("validate logger config: %w", err)
@@ -46,7 +52,40 @@ func New(c Config) (*zap.SugaredLogger, error) {
 		zap.String("app_version", c.App.Version),
 	)
 
-	return l.Sugar(), nil
+	return Logger{l: l.Sugar()}, nil
+}
+
+func (l Logger) Debug(msg string, fields ...logger.Field) {
+	l.l.Debugw(msg, zapFields(fields)...)
+}
+
+func (l Logger) Info(msg string, fields ...logger.Field) {
+	l.l.Infow(msg, zapFields(fields)...)
+}
+
+func (l Logger) Warn(msg string, fields ...logger.Field) {
+	l.l.Warnw(msg, zapFields(fields)...)
+}
+
+func (l Logger) Error(msg string, fields ...logger.Field) {
+	l.l.Errorw(msg, zapFields(fields)...)
+}
+
+func (l Logger) With(fields ...logger.Field) logger.Logger {
+	return Logger{l: l.l.With(zapFields(fields)...)}
+}
+
+func (l Logger) Sync() error {
+	return l.l.Sync()
+}
+
+func zapFields(fields []logger.Field) []any {
+	args := make([]any, 0, len(fields)*2)
+	for _, field := range fields {
+		args = append(args, field.Key, field.Value)
+	}
+
+	return args
 }
 
 func buildOutput(format logger.LogFormat) (zapcore.Encoder, zapcore.WriteSyncer, error) {
