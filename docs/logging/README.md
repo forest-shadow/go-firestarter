@@ -128,6 +128,10 @@ These are concrete, operationally useful defaults.
 
 ## Validation Strategy
 
+For the repository-level validation tradeoffs, including when to prefer manual
+`Validate()` methods and when a general-purpose validator becomes useful, see
+[`docs/validation`](../validation/README.md).
+
 ### Layer 1: struct-level validation with `Validate()`
 
 This is the baseline and most important practice.
