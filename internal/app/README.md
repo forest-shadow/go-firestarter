@@ -10,6 +10,7 @@ It currently owns:
 - applying environment variable overrides through the current `viper` pipeline
 - validating the assembled application configuration
 - applying logger defaults based on the selected app environment
+- applying HTTP server defaults
 - constructing the concrete application logger
 
 This package is intentionally internal because it wires repository-specific
@@ -21,9 +22,10 @@ startup behavior rather than defining reusable library contracts.
 
 It depends on:
 
-- `pkg/config` for typed config structures, validation, defaults, and decode hooks
+- `pkg/config` for app config structures, validation, and decode hooks
 - `pkg/env` for supported application environment values
-- `pkg/logger` for the shared logger contract
+- `pkg/httpserver` for HTTP server configuration and lifecycle behavior
+- `pkg/logger` for logger configuration, vocabulary, and the shared logger contract
 - `pkg/logger/zaplogger` for the current concrete logger backend
 
 Keep reusable config models, enum-like values, and logger implementation details
@@ -40,7 +42,13 @@ The loader:
 - reads YAML config from the repository root
 - enables `APP_`-prefixed environment variable overrides
 - decodes scalar config values through `pkg/config.DecodeHook()`
-- validates app and logger config before returning
+- validates app, logger, and HTTP server config before returning
+
+For example, `http_server.read_timeout: 20s` can be overridden with
+`APP_HTTP_SERVER_READ_TIMEOUT=20s`, and `http_server.read_header_timeout: 10s`
+can be overridden with `APP_HTTP_SERVER_READ_HEADER_TIMEOUT=10s`. The same
+mapping applies to `http_server.idle_timeout` and
+`APP_HTTP_SERVER_IDLE_TIMEOUT`.
 
 ## Logger setup
 

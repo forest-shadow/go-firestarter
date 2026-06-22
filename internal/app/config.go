@@ -10,12 +10,14 @@ import (
 
 	"github.com/forest-shadow/go-firestarter/pkg/config"
 	e "github.com/forest-shadow/go-firestarter/pkg/env"
+	"github.com/forest-shadow/go-firestarter/pkg/httpserver"
 	"github.com/forest-shadow/go-firestarter/pkg/logger"
 )
 
 type Config struct {
 	App        config.App        `mapstructure:"app"`
 	Logger     logger.Config     `mapstructure:"logger"`
+	HTTPServer httpserver.Config `mapstructure:"http_server"`
 }
 
 func GetConfig() (*Config, error) {
@@ -52,6 +54,11 @@ func GetConfig() (*Config, error) {
 	cfg.Logger = cfg.Logger.WithDefaults(cfg.App.Env)
 	if err := cfg.Logger.Validate(); err != nil {
 		return nil, fmt.Errorf("validate logger config: %w", err)
+	}
+
+	cfg.HTTPServer = cfg.HTTPServer.WithDefaults()
+	if err := cfg.HTTPServer.Validate(); err != nil {
+		return nil, fmt.Errorf("validate http server config: %w", err)
 	}
 
 	return &cfg, nil
